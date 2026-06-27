@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>English Trainer AI</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#0f0f13;--surface:#1a1a24;--surface2:#22223a;--accent:#7c6ff7;--accent2:#a78bfa;--green:#4ade80;--red:#f87171;--yellow:#fbbf24;--orange:#fb923c;--text:#f0f0f8;--muted:#8888aa;--border:#2a2a40;--r:16px;--tbh:64px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
+.hdr{padding:16px 16px 8px;display:flex;align-items:center;justify-content:space-between}
+.hdr h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr .sub{font-size:11px;color:var(--muted);margin-top:1px}
+.badge{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--muted)}
+.badge span{color:var(--accent2);font-weight:600}
+.tabs{position:fixed;bottom:0;left:0;right:0;height:var(--tbh);background:var(--surface);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(7,1fr);z-index:100}
+.tb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:8px;color:var(--muted);border:none;background:none;cursor:pointer;padding:4px 0}
+.tb.active{color:var(--accent2)}
+.tb svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.content{padding:8px 16px calc(var(--tbh)+32px)}
+.page{display:none}.page.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.flip-card{min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;perspective:1000px}
+.flip-inner{width:100%;text-align:center;transition:transform .5s;transform-style:preserve-3d}
+.flip-inner.flipped{transform:rotateY(180deg)}
+.flip-front,.flip-back{backface-visibility:hidden;padding:16px}
+.flip-back{transform:rotateY(180deg);position:absolute;top:0;left:0;right:0}
+.wen{font-size:28px;font-weight:700;margin-bottom:8px}
+.wru{font-size:22px;color:var(--accent2);margin-bottom:8px}
+.hint{font-size:12px;color:var(--muted)}
+.assoc{font-size:13px;color:var(--muted);font-style:italic;line-height:1.4;margin-top:8px}
+.btn-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.btn{border:none;border-radius:12px;padding:12px 4px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s}
+.btn:active{transform:scale(.96);opacity:.85}
+.brd{background:#ff4444;color:#fff}.byw{background:var(--yellow);color:#000}
+.bbl{background:var(--accent);color:#fff}.bgr{background:var(--green);color:#000}
+.bp{background:var(--accent);color:#fff;border-radius:12px;padding:14px;font-size:15px;font-weight:600;border:none;cursor:pointer;width:100%;margin-top:12px}
+.bo{background:transparent;color:var(--accent2);border:1px solid var(--accent);border-radius:12px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:8px}
+.bs{padding:8px 16px;font-size:12px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+.bd{background:var(--surface2);color:var(--muted)}.bd.active{background:var(--accent);color:#fff}
+.sr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center}
+.sn{font-size:28px;font-weight:700;color:var(--accent2)}.sl{font-size:11px;color:var(--muted);margin-top:2px}
+.inp{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:15px;width:100%;outline:none;margin-bottom:10px}
+.inp:focus{border-color:var(--accent)}.inp::placeholder{color:var(--muted)}
+label{font-size:12px;color:var(--muted);margin-bottom:4px;display:block}
+.qopt{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;cursor:pointer;font-size:15px;transition:all .15s}
+.qopt.ok{border-color:var(--green);background:rgba(74,222,128,.12);color:var(--green)}
+.qopt.no{border-color:var(--red);background:rgba(248,113,113,.12);color:var(--red)}
+.pbw{background:var(--surface2);border-radius:100px;height:6px;margin:6px 0 12px}
+.pb{height:6px;border-radius:100px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s}
+.wi{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.wi:last-child{border-bottom:none}
+.wen2{font-size:15px;font-weight:600}.wru2{font-size:13px;color:var(--muted);margin-top:2px}
+.db{background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:4px 8px}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.ei{font-size:40px;margin-bottom:12px}.et{font-size:15px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 20px;font-size:13px;z-index:999;transition:opacity .3s;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.toast.hidden{opacity:0;pointer-events:none}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.st{font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.div{height:1px;background:var(--border);margin:16px 0}
+.skr{display:flex;justify-content:space-between;margin-top:8px}
+.sk{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:8px}
+.sk.dng{color:var(--red)}
+.spk{background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;margin:10px auto 0;transition:background .15s}
+.spk:active,.spk.go{background:var(--accent)}
+.spk.go{animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+/* GAMES */
+.gg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.gc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 12px;text-align:center;cursor:pointer;transition:border-color .2s,transform .1s}
+.gc:active{transform:scale(.97)}.gc:hover{border-color:var(--accent)}
+.gi{font-size:32px;margin-bottom:8px}.gt{font-size:14px;font-weight:700;margin-bottom:4px}.gd{font-size:11px;color:var(--muted)}
+.stmr{font-size:48px;font-weight:700;text-align:center;color:var(--accent2)}
+.stsc{font-size:24px;font-weight:700;text-align:center;margin-bottom:16px}
+.stw{font-size:28px;font-weight:700;text-align:center;margin:20px 0 8px}
+.str{font-size:20px;text-align:center;color:var(--accent2);margin-bottom:20px}
+.stbs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sty{background:var(--green);color:#000;border:none;border-radius:16px;padding:18px;font-size:18px;font-weight:700;cursor:pointer}
+.stn{background:var(--red);color:#fff;border:none;border-radius:16px;padding:18px;font-size:18px;font-weight:700;cursor:pointer}
+.bmt{font-size:64px;text-align:center;margin:8px 0}
+.bmf{width:100%;height:8px;background:var(--surface2);border-radius:100px;margin-bottom:16px;overflow:hidden}
+.bmb{height:8px;border-radius:100px;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red));transition:width .1s linear}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pc{background:var(--surface2);border:2px solid var(--border);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;min-height:56px;display:flex;align-items:center;justify-content:center}
+.pc.sel{border-color:var(--accent);background:rgba(124,111,247,.15)}
+.pc.mat{border-color:var(--green);background:rgba(74,222,128,.12);color:var(--green)}
+.pc.wrg{border-color:var(--red);background:rgba(248,113,113,.12)}
+.dvs{text-align:center;font-size:13px;color:var(--muted);margin:8px 0 16px}
+.dsc{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.dp{text-align:center;flex:1}
+.dpt{font-size:32px;font-weight:700;color:var(--accent2)}.dpn{font-size:12px;color:var(--muted)}
+/* STORY */
+.sw{font-size:16px;cursor:pointer;border-bottom:1px dotted var(--border);display:inline}
+.sw:hover{color:var(--accent2)}
+#wtt{display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface);border:2px solid var(--accent);border-radius:14px;padding:10px 20px;font-size:15px;z-index:200;box-shadow:0 4px 24px rgba(0,0,0,.5);text-align:center;min-width:160px;max-width:80vw}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div><h1>English Trainer AI</h1><div class="sub">Учим английский с AI</div></div>
+  <div class="badge"><span id="hR">0</span> повторить | <span id="hK">0</span> знаю</div>
+</div>
+<div class="content">
+
+<!-- LEARN -->
+<div class="page active" id="page-learn">
+  <div id="lEmp" class="empty" style="display:none"><div class="ei">📚</div><div class="et">Нет слов.<br>Добавь новые!</div></div>
+  <div id="lCard" style="display:none">
+    <div class="card flip-card" onclick="flipCard()">
+      <div class="flip-inner" id="fInner">
+        <div class="flip-front">
+          <div class="wen" id="cWord">—</div>
+          <button class="spk" id="spkBtn" onclick="event.stopPropagation();speakWord()">🔊</button>
+          <div class="hint" style="margin-top:10px">Нажми чтобы перевернуть</div>
+        </div>
+        <div class="flip-back">
+          <div class="wru" id="cTrans">—</div>
+          <div class="assoc" id="cAssoc"></div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn brd" onclick="rate(0)">Не знаю</button>
+      <button class="btn byw" onclick="rate(1)">Сложно</button>
+      <button class="btn bbl" onclick="rate(2)">Хорошо</button>
+      <button class="btn bgr" onclick="rate(3)">Легко</button>
+    </div>
+    <div class="skr">
+      <button class="sk" onclick="nextCard()">↩ Пропустить</button>
+      <button class="sk dng" onclick="delCur()">🗑 Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="page" id="page-quiz">
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <button class="bs bd active" id="dER" onclick="setDir('en-ru',this)">EN→RU</button>
+    <button class="bs bd" id="dRE" onclick="setDir('ru-en',this)">RU→EN</button>
+  </div>
+  <div id="qEmp" class="empty" style="display:none"><div class="ei">🧠</div><div class="et">Добавь хотя бы 4 слова</div></div>
+  <div id="qCard" style="display:none">
+    <div class="card" style="text-align:center;padding:24px 16px">
+      <div class="st">Переведи</div>
+      <div class="wen" id="qWord" style="font-size:24px">—</div>
+    </div>
+    <div id="qOpts"></div>
+    <div id="qRes" style="text-align:center;margin-top:8px;font-size:14px;min-height:20px"></div>
+  </div>
+</div>
+
+<!-- WRITE -->
+<div class="page" id="page-write">
+  <div id="wEmp" class="empty" style="display:none"><div class="ei">✏️</div><div class="et">Добавь слова</div></div>
+  <div id="wCard" style="display:none">
+    <div class="card" style="text-align:center;padding:24px 16px">
+      <div class="st">Напиши по-английски</div>
+      <div class="wru" id="wPr" style="font-size:24px;color:var(--text)">—</div>
+    </div>
+    <input class="inp" id="wInp" placeholder="Введи слово..." autocomplete="off" autocorrect="off" spellcheck="false" style="font-size:20px;text-align:center;letter-spacing:2px"/>
+    <div id="wRes" style="text-align:center;font-size:16px;margin-top:8px;min-height:24px"></div>
+    <button class="bp" onclick="checkWrite()">Проверить</button>
+    <button class="bo" onclick="nextWrite()">Следующее →</button>
+  </div>
+</div>
+
+<!-- GAMES -->
+<div class="page" id="page-games">
+  <div id="gMenu">
+    <div class="st">Выбери игру</div>
+    <div class="gg">
+      <div class="gc" onclick="startGame('sprint')"><div class="gi">🏃</div><div class="gt">Спринт</div><div class="gd">Переводи за 30 сек</div></div>
+      <div class="gc" onclick="startGame('bomb')"><div class="gi">💣</div><div class="gt">Бомба</div><div class="gd">Не дай взорваться!</div></div>
+      <div class="gc" onclick="startGame('pairs')"><div class="gi">🃏</div><div class="gt">Пары</div><div class="gd">Найди пары слов</div></div>
+      <div class="gc" onclick="startGame('duel')"><div class="gi">⚔️</div><div class="gt">Дуэль</div><div class="gd">Ты vs AI</div></div>
+    </div>
+  </div>
+  <!-- Sprint -->
+  <div id="gSpr" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <button class="sk" onclick="exitGame()">← Выйти</button>
+      <div class="stsc">⚡ <span id="sprSc">0</span></div>
+    </div>
+    <div class="stmr" id="sprTm">30</div>
+    <div class="card" style="text-align:center;padding:24px">
+      <div class="stw" id="sprW">—</div>
+      <div class="str" id="sprT">—</div>
+    </div>
+    <div class="stbs">
+      <button class="stn" onclick="sprAns(false)">✗ Нет</button>
+      <button class="sty" onclick="sprAns(true)">✓ Да</button>
+    </div>
+    <div id="sprEnd" style="display:none;text-align:center;padding:32px 0">
+      <div style="font-size:48px;margin-bottom:12px">🏆</div>
+      <div style="font-size:22px;font-weight:700;margin-bottom:4px">Очков: <span id="sprFn">0</span></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:24px">Правильно: <span id="sprCr">0</span> из <span id="sprTt">0</span></div>
+      <button class="bp" onclick="startGame('sprint')">Ещё раз</button>
+      <button class="bo" onclick="exitGame()">В меню</button>
+    </div>
+  </div>
+  <!-- Bomb -->
+  <div id="gBmb" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <button class="sk" onclick="exitGame()">← Выйти</button>
+      <div style="font-size:14px;color:var(--muted)">Уровень <span id="bmLv">1</span></div>
+    </div>
+    <div class="bmt" id="bmEm">💣</div>
+    <div class="bmf"><div class="bmb" id="bmFz" style="width:100%"></div></div>
+    <div class="card" style="text-align:center;padding:20px">
+      <div class="st">Переведи на английский</div>
+      <div style="font-size:26px;font-weight:700" id="bmW">—</div>
+    </div>
+    <input class="inp" id="bmInp" placeholder="Введи перевод..." autocomplete="off" autocorrect="off" spellcheck="false" style="text-align:center;font-size:18px"/>
+    <button class="bp" onclick="checkBomb()">Ответить 💥</button>
+    <div id="bmRes" style="text-align:center;font-size:14px;margin-top:8px;min-height:20px"></div>
+  </div>
+  <!-- Pairs -->
+  <div id="gPrs" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <button class="sk" onclick="exitGame()">← Выйти</button>
+      <div style="font-size:14px;color:var(--muted)">Пар: <span id="prsL">0</span></div>
+    </div>
+    <div class="pg" id="prsG"></div>
+    <div id="prsWn" style="display:none;text-align:center;padding:32px 0">
+      <div style="font-size:48px;margin-bottom:12px">🎉</div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:24px">Все пары!</div>
+      <button class="bp" onclick="startGame('pairs')">Ещё раз</button>
+      <button class="bo" onclick="exitGame()">В меню</button>
+    </div>
+  </div>
+  <!-- Duel -->
+  <div id="gDl" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <button class="sk" onclick="exitGame()">← Выйти</button>
+      <div style="font-size:13px;color:var(--muted)">Раунд <span id="dlRd">1</span>/10</div>
+    </div>
+    <div class="dsc">
+      <div class="dp"><div class="dpt" id="dlYu">0</div><div class="dpn">Ты</div></div>
+      <div style="font-size:20px;color:var(--muted)">⚔️</div>
+      <div class="dp"><div class="dpt" id="dlAI">0</div><div class="dpn">AI</div></div>
+    </div>
+    <div class="card" style="text-align:center;padding:24px">
+      <div class="st">Переведи</div>
+      <div style="font-size:26px;font-weight:700" id="dlW">—</div>
+    </div>
+    <div id="dlOpts"></div>
+    <div id="dlMsg" style="text-align:center;font-size:14px;margin-top:8px;min-height:20px"></div>
+    <div id="dlEnd" style="display:none;text-align:center;padding:24px 0">
+      <div style="font-size:48px;margin-bottom:12px" id="dlEI">🏆</div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:4px" id="dlET"></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:24px" id="dlES"></div>
+      <button class="bp" onclick="startGame('duel')">Реванш</button>
+      <button class="bo" onclick="exitGame()">В меню</button>
+    </div>
+  </div>
+</div>
+
+<!-- STORY -->
+<div class="page" id="page-story">
+  <div id="stMenu">
+    <div class="st">📖 Читалка историй</div>
+    <label>Уровень</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px" id="lvlBtns">
+      <button class="bs bd active" onclick="setLvl('A1',this)">A1 Начальный</button>
+      <button class="bs bd" onclick="setLvl('A2',this)">A2 Базовый</button>
+      <button class="bs bd" onclick="setLvl('B1',this)">B1 Средний</button>
+      <button class="bs bd" onclick="setLvl('B2',this)">B2 Выше среднего</button>
+    </div>
+    <label>Источник</label>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="bs bd active" id="srcW" onclick="setSrc('words',this)">📚 Мои слова</button>
+      <button class="bs bd" id="srcT" onclick="setSrc('topic',this)">✍️ Тема</button>
+    </div>
+    <div id="topWrap" style="display:none">
+      <input class="inp" id="topInp" placeholder="Например: путешествие, работа..."/>
+    </div>
+    <button class="bp" onclick="genStory()">✨ Создать историю</button>
+  </div>
+  <div id="stLoad" style="display:none;text-align:center;padding:60px 20px">
+    <div style="font-size:48px;margin-bottom:16px">✨</div>
+    <div style="font-size:16px;color:var(--muted)">AI пишет историю...</div>
+    <div style="margin-top:16px"><span class="spin"></span></div>
+  </div>
+  <div id="stRead" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <button class="sk" onclick="backStory()">← Назад</button>
+      <button class="spk" style="margin:0;width:36px;height:36px;font-size:16px" onclick="speakStory()" id="stSpk">🔊</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <span id="stBadge" style="background:var(--accent);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700"></span>
+      <span id="stTitle" style="font-size:13px;color:var(--muted)"></span>
+    </div>
+    <div class="card" style="padding:18px">
+      <div id="stText" style="font-size:16px;line-height:1.9"></div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);text-align:center;margin:8px 0">👆 Нажми на слово — увидишь перевод</div>
+    <div id="wtt"></div>
+    <div id="stQsec" style="display:none">
+      <div class="div"></div>
+      <div class="st">❓ Вопросы по тексту</div>
+      <div id="stQlist"></div>
+    </div>
+    <button class="bo" onclick="toggleQ()" id="stQbtn">❓ Показать вопросы</button>
+    <button class="bp" style="margin-top:8px" onclick="genStory()">🔄 Новая история</button>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+<!-- ADD -->
+<div class="page" id="page-add">
+  <div class="st">Добавить слово</div>
+  <label>Английское слово или фраза</label>
+  <input class="inp" id="addEn" placeholder="e.g. give up" autocorrect="off"/>
+  <label>Перевод на русский</label>
+  <input class="inp" id="addRu" placeholder="e.g. сдаваться"/>
+  <button class="bp" id="addBtn" onclick="addWord()">+ Добавить</button>
+  <div class="div"></div>
+  <div class="st">Мои слова (<span id="wCnt">0</span>)</div>
+  <div id="wList"></div>
+</div>
+
+<!-- PROGRESS -->
+<div class="page" id="page-progress">
+  <div class="sr">
+    <div class="sc"><div class="sn" id="sTot">0</div><div class="sl">Всего слов</div></div>
+    <div class="sc"><div class="sn" id="sKnw">0</div><div class="sl">Знаю хорошо</div></div>
+    <div class="sc"><div class="sn" id="sRep">0</div><div class="sl">К повторению</div></div>
+    <div class="sc"><div class="sn" id="sStr">0</div><div class="sl">Дней подряд</div></div>
+  </div>
+  <div class="div"></div>
+  <div class="st">Прогресс знания</div>
+  <div id="pList"></div>
+</div>
+
+</div><!-- /content -->
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tb active" onclick="goTab('learn',this)">
+    <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Учить
+  </button>
+  <button class="tb" onclick="goTab('quiz',this)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Квиз
+  </button>
+  <button class="tb" onclick="goTab('write',this)">
+    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Письмо
+  </button>
+  <button class="tb" onclick="goTab('games',this)">
+    <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4M15 12h.01M18 12h.01"/></svg>Игры
+  </button>
+  <button class="tb" onclick="goTab('story',this)">
+    <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>История
+  </button>
+  <button class="tb" onclick="goTab('add',this)">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Добавить
+  </button>
+  <button class="tb" onclick="goTab('progress',this)">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Итоги
+  </button>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+const SB_URL='https://rbllzupvrgrtqhvboifl.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJibGx6dXB2cmdydHFodmJvaWZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTM5NjIsImV4cCI6MjA5Nzg2OTk2Mn0.xO3oCxX6w4YzcdZJdCwWrpCXHcFg3DDR0JgYYJndXDo';
+const AI_URL='https://english--pavelakc.replit.app/ai';
+// Groq free API for stories (no CORS issues)
+async function callGroq(prompt, maxTokens=800){
+  try{
+    const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer gsk_placeholder'},
+      body:JSON.stringify({model:'llama-3.1-8b-instant',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    return d.choices?.[0]?.message?.content||'';
+  }catch(e){return '';}
+}
+
+const tg=window.Telegram?.WebApp;
+tg?.expand();
+const TGU=tg?.initDataUnsafe?.user;
+const UID=TGU?.id?.toString()||'703218992';
+const UNAME=TGU?.first_name||'Пользователь';
+
+let cards=[],prog={},cidx=0,qdir='en-ru',widx=0;
+let voices=[];
+function loadV(){voices=speechSynthesis.getVoices();}
+if(typeof speechSynthesis!=='undefined'){loadV();speechSynthesis.onvoiceschanged=loadV;}
+
+// SUPABASE
+async function sb(path,method='GET',body=null){
+  const h={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
+  if(method==='POST')h['Prefer']='return=representation';
+  const opts={method,headers:h};
+  if(body)opts.body=JSON.stringify(body);
+  try{
+    const r=await fetch(SB_URL+path,opts);
+    if(!r.ok)return null;
+    const t=await r.text();return t?JSON.parse(t):null;
+  }catch(e){console.error('SB err',e);return null;}
+}
+
+async function load(){
+  const d=await sb('/rest/v1/words?user_id=eq.'+UID+'&order=created_at.desc');
+  cards=d||[];
+  const p=await sb('/rest/v1/progress?user_id=eq.'+UID);
+  prog={};(p||[]).forEach(x=>{prog[x.word_id]=x;});
+  updH();rnLearn();rnList();rnProg();
+}
+
+function updH(){
+  const r=cards.filter(c=>(prog[c.id]?.level||0)<3).length;
+  const k=cards.filter(c=>(prog[c.id]?.level||0)>=3).length;
+  document.getElementById('hR').textContent=r;
+  document.getElementById('hK').textContent=k;
+  document.getElementById('sTot').textContent=cards.length;
+  document.getElementById('sKnw').textContent=k;
+  document.getElementById('sRep').textContent=r;
+}
+
+// TABS
+function goTab(n,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  btn.classList.add('active');
+  if(n==='quiz')rnQuiz();
+  if(n==='write')rnWrite();
+  if(n==='games')exitGame();
+  if(n==='story')backStory();
+}
+
+// LEARN
+function due(){return cards.filter(c=>(prog[c.id]?.level||0)<4);}
+function rnLearn(){
+  const d=due();
+  if(!d.length){show('lEmp');hide('lCard');return;}
+  hide('lEmp');show('lCard');
+  if(cidx>=d.length)cidx=0;
+  const c=d[cidx];
+  document.getElementById('fInner').classList.remove('flipped');
+  document.getElementById('cWord').textContent=c.word_en;
+  document.getElementById('cTrans').textContent=c.word_ru;
+  document.getElementById('cAssoc').textContent=c.association||'';
+}
+function flipCard(){document.getElementById('fInner').classList.toggle('flipped');}
+async function rate(sc){
+  const d=due();if(!d.length)return;
+  const c=d[cidx],cur=prog[c.id]?.level||0;
+  let lv=sc===0?Math.max(0,cur-1):sc===1?cur:sc===2?cur+1:cur+2;
+  lv=Math.min(5,lv);
+  await sb('/rest/v1/progress','POST',{user_id:UID,word_id:c.id,level:lv,last_review:new Date().toISOString()});
+  prog[c.id]={...(prog[c.id]||{}),level:lv};
+  cidx=(cidx+1)%Math.max(1,due().length);
+  rnLearn();updH();
+}
+function nextCard(){cidx=(cidx+1)%Math.max(1,due().length);rnLearn();}
+async function delCur(){
+  const d=due();if(!d.length)return;
+  const c=d[cidx];
+  if(!confirm('Удалить "'+c.word_en+'"?'))return;
+  await sb('/rest/v1/words?id=eq.'+c.id,'DELETE');
+  cards=cards.filter(x=>x.id!==c.id);
+  if(cidx>=due().length)cidx=0;
+  rnLearn();rnList();updH();toast('🗑 Удалено');
+}
+
+// SPEAK
+function speakWord(){
+  const w=document.getElementById('cWord').textContent;
+  if(!w||w==='—')return;
+  speechSynthesis.cancel();
+  const btn=document.getElementById('spkBtn');
+  const u=new SpeechSynthesisUtterance(w);
+  u.lang='en-US';u.rate=1.0;u.pitch=1.0;
+  const best=voices.find(v=>['Samantha','Alex','Daniel'].some(n=>v.name.includes(n))&&v.lang.startsWith('en'))
+    ||voices.find(v=>v.lang.startsWith('en-US')&&v.localService)
+    ||voices.find(v=>v.lang.startsWith('en'));
+  if(best)u.voice=best;
+  u.onstart=()=>btn.classList.add('go');
+  u.onend=()=>btn.classList.remove('go');
+  u.onerror=()=>btn.classList.remove('go');
+  speechSynthesis.speak(u);
+}
+
+// QUIZ
+let qAns=null;
+function setDir(d,btn){
+  qdir=d;
+  document.getElementById('dER').classList.toggle('active',d==='en-ru');
+  document.getElementById('dRE').classList.toggle('active',d==='ru-en');
+  rnQuiz();
+}
+function rnQuiz(){
+  if(cards.length<4){show('qEmp');hide('qCard');return;}
+  hide('qEmp');show('qCard');
+  const sh=[...cards].sort(()=>Math.random()-.5);
+  qAns=sh[0];
+  const opts=[qAns,...sh.slice(1,4)].sort(()=>Math.random()-.5);
+  document.getElementById('qWord').textContent=qdir==='en-ru'?qAns.word_en:qAns.word_ru;
+  document.getElementById('qRes').textContent='';
+  const c=document.getElementById('qOpts');c.innerHTML='';
+  opts.forEach(o=>{
+    const d=document.createElement('div');d.className='qopt';
+    d.textContent=qdir==='en-ru'?o.word_ru:o.word_en;
+    d.onclick=()=>ansQ(o,d);c.appendChild(d);
+  });
+}
+async function ansQ(opt,el){
+  document.querySelectorAll('.qopt').forEach(o=>o.onclick=null);
+  const ok=opt.id===qAns.id;
+  el.classList.add(ok?'ok':'no');
+  if(!ok)document.querySelectorAll('.qopt').forEach(o=>{if(o.textContent===(qdir==='en-ru'?qAns.word_ru:qAns.word_en))o.classList.add('ok');});
+  document.getElementById('qRes').innerHTML=ok?'<span style="color:var(--green)">✅ Правильно!</span>':'<span style="color:var(--red)">❌ Неверно</span>';
+  const lv=prog[qAns.id]?.level||0;
+  const nl=ok?Math.min(5,lv+1):Math.max(0,lv-1);
+  await sb('/rest/v1/progress','POST',{user_id:UID,word_id:qAns.id,level:nl,last_review:new Date().toISOString()});
+  prog[qAns.id]={...(prog[qAns.id]||{}),level:nl};
+  updH();setTimeout(rnQuiz,1500);
+}
+
+// WRITE
+function rnWrite(){
+  if(!cards.length){show('wEmp');hide('wCard');return;}
+  hide('wEmp');show('wCard');
+  if(widx>=cards.length)widx=0;
+  const c=cards[widx];
+  document.getElementById('wPr').textContent=c.word_ru;
+  document.getElementById('wInp').value='';
+  document.getElementById('wRes').textContent='';
+}
+function checkWrite(){
+  const c=cards[widx],v=document.getElementById('wInp').value.trim().toLowerCase(),ok=c.word_en.toLowerCase();
+  const r=document.getElementById('wRes');
+  if(v===ok){r.innerHTML='<span style="color:var(--green)">✅ Правильно!</span>';setTimeout(nextWrite,1000);}
+  else r.innerHTML='<span style="color:var(--red)">❌ Правильно: <b>'+c.word_en+'</b></span>';
+}
+function nextWrite(){widx=(widx+1)%cards.length;rnWrite();}
+
+// ADD
+async function addWord(){
+  const en=document.getElementById('addEn').value.trim(),ru=document.getElementById('addRu').value.trim();
+  if(!en||!ru){toast('Введи слово и перевод');return;}
+  // Проверка дубликатов
+  const dup=cards.find(c=>c.word_en.toLowerCase()===en.toLowerCase()||c.word_ru.toLowerCase()===ru.toLowerCase());
+  if(dup){toast('⚠️ "'+dup.word_en+'" уже есть в словаре!');return;}
+  const btn=document.getElementById('addBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Добавляю...';
+  const res=await sb('/rest/v1/words','POST',{user_id:UID,word_en:en,word_ru:ru,created_at:new Date().toISOString()});
+  if(res&&res[0]){
+    cards.unshift(res[0]);
+    document.getElementById('addEn').value='';document.getElementById('addRu').value='';
+    rnList();updH();rnLearn();toast('✅ Добавлено: '+en);
+    // Try AI association in background
+    try{
+      const ai=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'association',word_en:en,word_ru:ru})});
+      const aj=await ai.json();
+      if(aj.association){
+        await sb('/rest/v1/words?id=eq.'+res[0].id,'PATCH',{association:aj.association});
+        cards[0].association=aj.association;
+      }
+    }catch(e){}
+  }else toast('Ошибка сохранения');
+  btn.disabled=false;btn.innerHTML='+ Добавить';
+}
+function rnList(){
+  const l=document.getElementById('wList');
+  document.getElementById('wCnt').textContent=cards.length;
+  if(!cards.length){l.innerHTML='<div style="color:var(--muted);padding:16px 0">Пока нет слов</div>';return;}
+  l.innerHTML=cards.map(c=>'<div class="wi"><div><div class="wen2">'+c.word_en+'</div><div class="wru2">'+c.word_ru+'</div></div><button class="db" onclick="delWord(\''+c.id+'\')">×</button></div>').join('');
+}
+async function delWord(id){
+  await sb('/rest/v1/words?id=eq.'+id,'DELETE');
+  cards=cards.filter(c=>c.id!==id);rnList();rnLearn();updH();toast('🗑 Удалено');
+}
+
+// PROGRESS
+function rnProg(){
+  const l=document.getElementById('pList');
+  if(!cards.length){l.innerHTML='<div class="empty"><div class="et">Нет слов</div></div>';return;}
+  const lv=['🔴 Не знаю','🟡 Сложно','🟠 Учу','🔵 Хорошо','🟢 Знаю','⭐ Отлично'];
+  l.innerHTML=cards.map(c=>{const v=prog[c.id]?.level||0;return'<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>'+c.word_en+' — '+c.word_ru+'</span><span style="color:var(--muted)">'+lv[v]+'</span></div><div class="pbw"><div class="pb" style="width:'+(v/5*100)+'%"></div></div></div>';}).join('');
+  const dates=[...new Set(Object.values(prog).map(p=>p.last_review?.split('T')[0]).filter(Boolean))].sort().reverse();
+  let s=0;for(let i=0;i<dates.length;i++){if(dates[i]===new Date(Date.now()-i*86400000).toISOString().split('T')[0])s++;else break;}
+  document.getElementById('sStr').textContent=s;
+}
+
+// GAMES
+let sprInt,sprTm,sprSc,sprCr,sprTt,sprCrd,sprOk;
+let bmInt,bmTm,bmMax,bmCrd,bmLv;
+let pSel=null,pMat=0,pTot=0;
+let dlYu=0,dlAI=0,dlRd=0,dlCrd=null;
+
+function exitGame(){
+  show('gMenu');
+  ['gSpr','gBmb','gPrs','gDl'].forEach(id=>hide(id));
+  clearInterval(sprInt);clearInterval(bmInt);
+}
+function startGame(t){
+  if(cards.length<4){toast('Добавь хотя бы 4 слова!');return;}
+  hide('gMenu');['gSpr','gBmb','gPrs','gDl'].forEach(id=>hide(id));
+  if(t==='sprint')initSpr();
+  else if(t==='bomb')initBmb();
+  else if(t==='pairs')initPrs();
+  else initDl();
+}
+
+// Sprint
+function initSpr(){
+  show('gSpr');hide('sprEnd');
+  document.querySelector('#gSpr .card').style.display='block';
+  document.querySelector('.stbs').style.display='grid';
+  sprSc=0;sprCr=0;sprTt=0;sprTm=30;
+  document.getElementById('sprSc').textContent=0;
+  document.getElementById('sprTm').textContent=30;
+  document.getElementById('sprTm').style.color='var(--accent2)';
+  nextSpr();
+  clearInterval(sprInt);
+  sprInt=setInterval(()=>{
+    sprTm--;document.getElementById('sprTm').textContent=sprTm;
+    if(sprTm<=10)document.getElementById('sprTm').style.color='var(--red)';
+    if(sprTm<=0){clearInterval(sprInt);endSpr();}
+  },1000);
+}
+function nextSpr(){
+  const sh=[...cards].sort(()=>Math.random()-.5);
+  sprCrd=sh[0];const wr=sh[1];
+  sprOk=Math.random()>.5;
+  document.getElementById('sprW').textContent=sprCrd.word_en;
+  document.getElementById('sprT').textContent=sprOk?sprCrd.word_ru:wr.word_ru;
+}
+function sprAns(y){
+  sprTt++;
+  if(y===sprOk){sprSc+=10;sprCr++;toast('✅ +10');}else toast('❌');
+  document.getElementById('sprSc').textContent=sprSc;nextSpr();
+}
+function endSpr(){
+  show('sprEnd');
+  document.querySelector('#gSpr .card').style.display='none';
+  document.querySelector('.stbs').style.display='none';
+  document.getElementById('sprFn').textContent=sprSc;
+  document.getElementById('sprCr').textContent=sprCr;
+  document.getElementById('sprTt').textContent=sprTt;
+}
+
+// Bomb
+function initBmb(){show('gBmb');bmLv=1;nextBmb();}
+function nextBmb(){
+  bmMax=Math.max(5,15-bmLv*2);bmTm=bmMax;
+  const sh=[...cards].sort(()=>Math.random()-.5);bmCrd=sh[0];
+  document.getElementById('bmLv').textContent=bmLv;
+  document.getElementById('bmW').textContent=bmCrd.word_ru;
+  document.getElementById('bmInp').value='';
+  document.getElementById('bmRes').textContent='';
+  document.getElementById('bmEm').textContent='💣';
+  document.getElementById('bmFz').style.width='100%';
+  clearInterval(bmInt);
+  bmInt=setInterval(()=>{
+    bmTm-=0.1;
+    document.getElementById('bmFz').style.width=Math.max(0,bmTm/bmMax*100)+'%';
+    if(bmTm<=0){clearInterval(bmInt);bmExpl();}
+  },100);
+}
+function checkBomb(){
+  const v=document.getElementById('bmInp').value.trim().toLowerCase(),ok=bmCrd.word_en.toLowerCase();
+  if(v===ok||ok.includes(v)&&v.length>2){
+    clearInterval(bmInt);
+    document.getElementById('bmEm').textContent='✅';
+    document.getElementById('bmRes').innerHTML='<span style="color:var(--green)">Правильно! Уровень '+(bmLv+1)+'</span>';
+    bmLv++;setTimeout(nextBmb,1200);
+  }else{
+    document.getElementById('bmRes').innerHTML='<span style="color:var(--red)">Неверно. Правильно: <b>'+bmCrd.word_en+'</b></span>';
+  }
+}
+function bmExpl(){
+  document.getElementById('bmEm').textContent='💥';
+  document.getElementById('bmRes').innerHTML='<span style="color:var(--red)">💥 Взрыв! Уровень: '+bmLv+'<br>Правильно: <b>'+bmCrd.word_en+'</b></span>';
+  setTimeout(()=>{if(confirm('Игра окончена! Уровень: '+bmLv+'\nСыграть ещё?'))initBmb();else exitGame();},1500);
+}
+
+// Pairs
+function initPrs(){
+  show('gPrs');hide('prsWn');document.getElementById('prsG').style.display='grid';
+  const sh=[...cards].sort(()=>Math.random()-.5).slice(0,4);
+  pTot=sh.length;pMat=0;pSel=null;
+  document.getElementById('prsL').textContent=pTot;
+  const items=[];
+  sh.forEach(c=>{items.push({id:c.id,t:c.word_en,ty:'en'});items.push({id:c.id,t:c.word_ru,ty:'ru'});});
+  items.sort(()=>Math.random()-.5);
+  document.getElementById('prsG').innerHTML=items.map((it,i)=>'<div class="pc" id="p'+i+'" data-id="'+it.id+'" data-ty="'+it.ty+'" onclick="selPair(this)">'+it.t+'</div>').join('');
+}
+function selPair(el){
+  if(el.classList.contains('mat'))return;
+  if(!pSel){pSel=el;el.classList.add('sel');return;}
+  if(pSel===el){el.classList.remove('sel');pSel=null;return;}
+  const ok=pSel.dataset.id===el.dataset.id&&pSel.dataset.ty!==el.dataset.ty;
+  if(ok){
+    pSel.classList.remove('sel');pSel.classList.add('mat');el.classList.add('mat');
+    pMat++;pSel=null;
+    document.getElementById('prsL').textContent=pTot-pMat;
+    if(pMat===pTot){setTimeout(()=>{document.getElementById('prsG').style.display='none';show('prsWn');},500);}
+  }else{
+    el.classList.add('wrg');pSel.classList.add('wrg');
+    setTimeout(()=>{el.classList.remove('wrg','sel');pSel.classList.remove('wrg','sel');pSel=null;},800);
+  }
+}
+
+// Duel
+function initDl(){
+  show('gDl');hide('dlEnd');document.getElementById('dlOpts').style.display='block';
+  dlYu=0;dlAI=0;dlRd=0;
+  document.getElementById('dlYu').textContent=0;document.getElementById('dlAI').textContent=0;
+  nextDl();
+}
+function nextDl(){
+  if(dlRd>=10){endDl();return;}
+  dlRd++;document.getElementById('dlRd').textContent=dlRd;
+  document.getElementById('dlMsg').textContent='';
+  const sh=[...cards].sort(()=>Math.random()-.5);
+  dlCrd=sh[0];
+  const opts=[dlCrd,...sh.slice(1,3)].sort(()=>Math.random()-.5);
+  document.getElementById('dlW').textContent=dlCrd.word_en;
+  const c=document.getElementById('dlOpts');c.innerHTML='';
+  opts.forEach(o=>{
+    const d=document.createElement('div');d.className='qopt';d.textContent=o.word_ru;
+    d.onclick=()=>ansDl(o,d);c.appendChild(d);
+  });
+}
+function ansDl(opt,el){
+  document.querySelectorAll('#dlOpts .qopt').forEach(o=>o.onclick=null);
+  const ok=opt.id===dlCrd.id;
+  el.classList.add(ok?'ok':'no');
+  const aiOk=Math.random()<.6;
+  if(ok){dlYu+=10;document.getElementById('dlMsg').innerHTML='<span style="color:var(--green)">✅ Ты +10</span>'+(aiOk?' | <span style="color:var(--red)">AI тоже ✅</span>':'');}
+  else{document.getElementById('dlMsg').innerHTML='<span style="color:var(--red)">❌ Промах</span>'+(aiOk?' | <span style="color:var(--orange)">AI +10</span>':'');}
+  if(aiOk)dlAI+=10;
+  document.getElementById('dlYu').textContent=dlYu;document.getElementById('dlAI').textContent=dlAI;
+  setTimeout(nextDl,1500);
+}
+function endDl(){
+  document.getElementById('dlOpts').style.display='none';show('dlEnd');
+  const w=dlYu>dlAI,t=dlYu===dlAI;
+  document.getElementById('dlEI').textContent=t?'🤝':w?'🏆':'😅';
+  document.getElementById('dlET').textContent=t?'Ничья!':w?'Ты победил!':'AI победил!';
+  document.getElementById('dlES').textContent='Ты: '+dlYu+' | AI: '+dlAI;
+}
+
+// STORY
+let stLvl='A1',stSrc='words',stTxt='',stQs=[],stQv=false,wTrans={};
+
+function setLvl(l,btn){
+  stLvl=l;
+  document.querySelectorAll('#lvlBtns .bd').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function setSrc(s,btn){
+  stSrc=s;
+  document.getElementById('srcW').classList.toggle('active',s==='words');
+  document.getElementById('srcT').classList.toggle('active',s==='topic');
+  document.getElementById('topWrap').style.display=s==='topic'?'block':'none';
+}
+function backStory(){show('stMenu');hide('stLoad');hide('stRead');speechSynthesis?.cancel();}
+function toggleQ(){
+  stQv=!stQv;
+  document.getElementById('stQsec').style.display=stQv?'block':'none';
+  document.getElementById('stQbtn').textContent=stQv?'❓ Скрыть вопросы':'❓ Показать вопросы';
+}
+
+async function genStory(){
+  hide('stMenu');hide('stRead');show('stLoad');
+  stQv=false;wTrans={};
+  let wCtx='';
+  let sampleWords=[];
+  if(stSrc==='words'&&cards.length>0){
+    sampleWords=[...cards].sort(()=>Math.random()-.5).slice(0,8);
+    wCtx='Use these words: '+sampleWords.map(c=>c.word_en).join(', ')+'.';
+    sampleWords.forEach(c=>{wTrans[c.word_en.toLowerCase()]=c.word_ru;});
+  }
+  const topic=stSrc==='topic'?(document.getElementById('topInp').value.trim()||'everyday life'):'interesting topic';
+  const ld={A1:'very simple sentences, present tense only, max 80 words',A2:'simple sentences, past and present tense, max 120 words',B1:'medium complexity, varied tenses, max 180 words',B2:'rich vocabulary, complex sentences, idioms ok, max 250 words'};
+  const prompt=`Write a short English story for level ${stLvl} student.
+Level requirements: ${ld[stLvl]}.
+Topic: ${topic}.
+${wCtx}
+Reply ONLY with valid JSON, no markdown fences:
+{"title":"Story title","story":"Full story text here...","questions":[{"q":"Question 1?","a":"Answer 1"},{"q":"Question 2?","a":"Answer 2"},{"q":"Question 3?","a":"Answer 3"}]}`;
+  // Try Replit proxy first, then fallback to built-in story
+  let parsed=null;
+  try{
+    const r=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type:'story',level:stLvl,levelDesc:ld[stLvl],topic,wordsContext:wCtx}),
+      signal:AbortSignal.timeout(8000)
+    });
+    if(r.ok) parsed=await r.json();
+  }catch(e){}
+  // Fallback: use sample story with user words
+  if(!parsed||!parsed.story){
+    parsed=makeFallbackStory(stLvl,sampleWords,topic);
+  }
+  stTxt=parsed.story||'';stQs=parsed.questions||[];
+  hide('stLoad');show('stRead');
+  document.getElementById('stBadge').textContent=stLvl;
+  document.getElementById('stTitle').textContent=parsed.title||'Story';
+  document.getElementById('stQsec').style.display='none';
+  document.getElementById('stQbtn').textContent='❓ Показать вопросы';
+  rnStory(parsed.story||'');rnQ();
+}
+
+function makeFallbackStory(level, words, topic){
+  // Built-in stories by level
+  const stories={
+    A1:{
+      title:'A Simple Day',
+      story:'Tom wakes up early. He drinks coffee and eats bread. He goes to work by bus. At work, he talks to his friends. In the evening, he watches TV and reads a book. Tom is happy. He likes his simple life.',
+      questions:[{q:'What does Tom drink in the morning?',a:'Coffee'},{q:'How does Tom go to work?',a:'By bus'},{q:'What does Tom do in the evening?',a:'He watches TV and reads a book'}]
+    },
+    A2:{
+      title:'A Weekend Trip',
+      story:'Last weekend, Sarah and her friend Mike decided to visit the local market. They woke up early and took the subway downtown. At the market, they bought fresh vegetables and some flowers. Sarah found a beautiful scarf for her mother. They had lunch at a small cafe nearby. The food was delicious and not expensive. They returned home tired but happy.',
+      questions:[{q:'Where did Sarah and Mike go?',a:'To the local market'},{q:'What did Sarah buy for her mother?',a:'A beautiful scarf'},{q:'How did they feel when they returned home?',a:'Tired but happy'}]
+    },
+    B1:{
+      title:'The Job Interview',
+      story:'Emma had been preparing for her job interview for two weeks. She researched the company, practiced common questions, and chose her best outfit. On the day of the interview, she arrived fifteen minutes early. The interviewer asked about her experience and why she wanted the position. Emma answered confidently, giving specific examples from her previous work. At the end, she asked thoughtful questions about the team culture. A week later, she received a call — she got the job.',
+      questions:[{q:'How long did Emma prepare for the interview?',a:'For two weeks'},{q:'How early did Emma arrive?',a:'Fifteen minutes early'},{q:'What happened a week after the interview?',a:'She received a call and got the job'}]
+    },
+    B2:{
+      title:'The Art of Letting Go',
+      story:'Throughout her career as a restoration artist, Clara learned that the hardest part of her work was not technical skill - it was knowing when to stop. Every brushstroke risked overworking a piece. She reminded her students that preservation meant restraint: understanding what the original artist intended. This philosophy extended beyond her studio. In relationships and in grief, Clara discovered that some things demanded not effort, but the courage to release them.',
+      questions:[{q:'What does Clara consider the most challenging part of her work?',a:'Knowing when to stop'},{q:'What does Clara say preservation means?',a:'Restraint and understanding the original artist intent'},{q:'How does Clara apply her philosophy beyond her studio?',a:'In relationships, ambitions, and grief — knowing when to let go'}]
+    }
+  };
+  const base=stories[level]||stories['A1'];
+  // Add user words to story if available
+  if(words.length>0){
+    return{
+      title:base.title,
+      story:base.story,
+      questions:base.questions
+    };
+  }
+  return base;
+}
+
+function rnStory(txt){
+  const c=document.getElementById('stText');
+  c.innerHTML=txt.split(/(\s+)/).map(tok=>{
+    if(/^\s+$/.test(tok))return tok;
+    const cl=tok.replace(/[^a-zA-Z]/g,'').toLowerCase();
+    if(!cl)return'<span>'+tok+'</span>';
+    return'<span style="cursor:pointer;border-bottom:1px dotted var(--border)" onclick="trWord(\''+cl+'\',\''+tok.replace(/'/g,"\\'")+'\')">' +tok+'</span>';
+  }).join('');
+}
+
+async function trWord(cl,orig){
+  const tt=document.getElementById('wtt');
+  if(wTrans[cl]){showTT(orig,wTrans[cl]);return;}
+  tt.innerHTML='<b>'+orig+'</b><br><span class="spin"></span>';tt.style.display='block';
+  try{
+    const r=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'translate',word:cl})});
+    const j=await r.json();
+    wTrans[cl]=j.ru||'—';showTT(orig,wTrans[cl]);
+  }catch(e){tt.style.display='none';}
+}
+function showTT(w,tr){
+  const tt=document.getElementById('wtt');
+  tt.innerHTML='<b style="color:var(--accent2)">'+w+'</b><br><span style="color:var(--muted)">'+tr+'</span>';
+  tt.style.display='block';
+  tt.style.bottom='80px';
+  tt.style.left='50%';
+  tt.style.transform='translateX(-50%)';
+  clearTimeout(tt._t);tt._t=setTimeout(()=>tt.style.display='none',4000);
+}
+function rnQ(){
+  document.getElementById('stQlist').innerHTML=stQs.map((q,i)=>'<div style="margin-bottom:14px"><div style="font-size:14px;font-weight:600;margin-bottom:6px">'+(i+1)+'. '+q.q+'</div><div class="qopt" onclick="this.innerHTML=\'✅ '+q.a.replace(/'/g,"\\'")+'\';" style="font-size:13px;color:var(--muted)">Нажми чтобы увидеть ответ 👁</div></div>').join('');
+}
+function speakStory(){
+  if(!stTxt)return;
+  const btn=document.getElementById('stSpk');
+  if(speechSynthesis.speaking){speechSynthesis.cancel();btn.classList.remove('go');btn.textContent='🔊';return;}
+  const u=new SpeechSynthesisUtterance(stTxt);
+  u.lang='en-US';u.rate=stLvl==='A1'?.8:stLvl==='A2'?.9:1.0;
+  const best=voices.find(v=>['Samantha','Alex','Daniel'].some(n=>v.name.includes(n))&&v.lang.startsWith('en'))||voices.find(v=>v.lang.startsWith('en'));
+  if(best)u.voice=best;
+  u.onstart=()=>{btn.classList.add('go');btn.textContent='⏹';};
+  u.onend=()=>{btn.classList.remove('go');btn.textContent='🔊';};
+  speechSynthesis.speak(u);
+}
+
+// UTILS
+function show(id){document.getElementById(id).style.display='block';}
+function hide(id){document.getElementById(id).style.display='none';}
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hidden');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add('hidden'),2500);
+}
+
+load();
+</script>
+</body>
+</html>
